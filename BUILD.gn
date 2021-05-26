@@ -16,6 +16,14 @@
 import("//build_overrides/build.gni")
 import("//build_overrides/vulkan_loader.gni")
 
+declare_args() {
+  if (is_win) {
+    vulkan_loader_library_name = "vulkan-1"
+  } else if (is_fuchsia) {
+    vulkan_loader_library_name = "vulkan"
+  }
+}
+
 if (is_fuchsia) {
   import("//build/cpp/sdk_shared_library.gni")
   import("//build/sdk/sdk_documentation.gni")
@@ -121,8 +129,12 @@ if (!is_android) {
       "loader/wsi.c",
       "loader/wsi.h",
     ]
+
+    if (defined(vulkan_loader_library_name)) {
+      output_name = vulkan_loader_library_name
+    }
+
     if (is_win) {
-      output_name = "vulkan-1"
       sources += [
         "loader/dirent_on_windows.c",
         "loader/dirent_on_windows.h",
@@ -162,7 +174,6 @@ if (!is_android) {
     configs -= vulkan_undefine_configs
 
     if (is_fuchsia) {
-      output_name = "vulkan"
       category = "partner"
 
       # The Vulkan loader's interface is defined by standard Khronos vulkan headers
