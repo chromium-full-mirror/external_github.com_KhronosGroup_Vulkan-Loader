@@ -17,11 +17,7 @@ import("//build_overrides/build.gni")
 import("//build_overrides/vulkan_loader.gni")
 
 declare_args() {
-  if (is_win) {
-    vulkan_loader_library_name = "vulkan-1"
-  } else if (is_fuchsia) {
-    vulkan_loader_library_name = "vulkan"
-  }
+  custom_vulkan_loader_library_name = ""
 }
 
 if (is_fuchsia) {
@@ -130,8 +126,19 @@ if (!is_android) {
       "loader/wsi.h",
     ]
 
-    if (defined(vulkan_loader_library_name)) {
-      output_name = vulkan_loader_library_name
+    if (custom_vulkan_loader_library_name != "") {
+      output_name = custom_vulkan_loader_library_name
+    } else {
+      if (is_win) {
+        output_name = "vulkan-1"
+      } else {
+        output_name = "vulkan"
+
+        # Create libvulkan.so.1 on Linux instead of libvulkan.so
+        if (is_linux && vulkan_loader_shared) {
+          output_extension = "so.1"
+        }
+      }
     }
 
     if (is_win) {
@@ -186,11 +193,6 @@ if (!is_android) {
       ]
 
       runtime_deps = [ "//sdk/lib/fdio:fdio_sdk" ]
-    }
-
-    # Create libvulkan.so.1 on Linux instead of libvulkan.so
-    if (is_linux && vulkan_loader_shared) {
-      output_extension = "so.1"
     }
   }
 }
